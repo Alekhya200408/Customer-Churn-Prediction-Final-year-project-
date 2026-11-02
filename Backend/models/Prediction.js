@@ -16,7 +16,11 @@ const predictionSchema = new mongoose.Schema(
             required: true,
             min: 0,
             max: 1
-        }
+        },
+        customerName: {
+            type: String,
+            required: true
+        },
     },
     { timestamps: true }
 );
