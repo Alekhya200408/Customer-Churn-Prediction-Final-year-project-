@@ -8,6 +8,8 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Prediction from "./pages/Prediction";
 import History from "./pages/History";
+import Result from "./pages/Result";
+import CustomerDetails from "./pages/CustomerDetails";
 
 function App() {
   return (
@@ -40,6 +42,26 @@ function App() {
           element={
             <Layout>
               <History />
+            </Layout>
+          }
+        />
+
+        {/* Individual Customer Details */}
+        <Route
+          path="/history/:id"
+          element={
+            <Layout>
+              <CustomerDetails />
+            </Layout>
+          }
+        />
+
+        {/* Prediction Result Page */}
+        <Route
+          path="/result"
+          element={
+            <Layout>
+              <Result />
             </Layout>
           }
         />

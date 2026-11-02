@@ -7,7 +7,7 @@ import {
   CreditCard
 } from "lucide-react";
 
-const ReviewPrediction = ({ formData, prevStep, onPredict }) => {
+const ReviewPrediction = ({ formData, prevStep, onPredict,loading }) => {
 
   const sections = [
     {
@@ -124,13 +124,14 @@ const ReviewPrediction = ({ formData, prevStep, onPredict }) => {
         </button>
 
         <button
-          type="button"
-          onClick={onPredict}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
-        >
-          <BrainCircuit size={18} />
-          Predict Customer Churn
-        </button>
+  type="button"
+  onClick={onPredict}
+  disabled={loading}
+  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg"
+>
+  <BrainCircuit size={18} />
+  {loading ? "Generating Prediction..." : "Predict Customer Churn"}
+</button>
 
       </div>
 

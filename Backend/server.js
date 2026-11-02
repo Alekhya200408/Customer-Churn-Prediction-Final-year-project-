@@ -2,10 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import axios from 'axios';
 import "dotenv/config";
-import DBconn from "./DB/dbConn.js";
+import DBconn from "./src/DB/dbConn.js";
 
 
-import Prediction from "./models/Prediction.js";
+import Prediction from "./src/models/Prediction.js";
 
 const app=express()
 
@@ -129,6 +129,28 @@ app.get("/api/predictions", async (req, res) => {
 
         res.status(500).json({
             message: "Failed to fetch prediction history"
+        });
+    }
+});
+
+// Get a single prediction by ID
+app.get("/api/predictions/:id", async (req, res) => {
+    try {
+        const prediction = await Prediction.findById(req.params.id);
+
+        if (!prediction) {
+            return res.status(404).json({
+                message: "Prediction not found"
+            });
+        }
+
+        res.status(200).json(prediction);
+
+    } catch (error) {
+        console.error("Prediction details error:", error.message);
+
+        res.status(400).json({
+            message: "Unable to fetch prediction details"
         });
     }
 });
