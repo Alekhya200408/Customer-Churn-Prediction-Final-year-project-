@@ -1,17 +1,24 @@
-import express from 'express'
-import cors from 'cors'
-import axios from 'axios';
+
+import express from "express";
+import cors from "cors";
+import axios from "axios";
+import cookieParser from "cookie-parser";
 import "dotenv/config";
+
 import DBconn from "./src/DB/dbConn.js";
-
-
 import Prediction from "./src/models/Prediction.js";
+import userRoutes from "./src/routes/userRoutes.js";
 
-const app=express()
+const app = express();
 
+// Middleware
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 
-app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // Test route
 app.get("/", (req, res) => {
@@ -20,54 +27,13 @@ app.get("/", (req, res) => {
     });
 });
 
-// Prediction route
-
-// app.post("/api/predict", async (req, res) => {
-//     try {
-//         const customerData = req.body;
-
-//         // 1. Get prediction from Python ML API
-//         const response = await axios.post(
-//             "http://127.0.0.1:8000/predict",
-//             customerData
-//         );
-
-//         const result = response.data;
-
-//         // 2. Save prediction in MongoDB
-//         const savedPrediction = await Prediction.create({
-//             customerName: req.body.customerName,
-//             customer: customerData,
-//             prediction: result.prediction,
-//             churnProbability: result.churn_probability
-//         });
-
-//         // 3. Send response to client
-//         res.status(201).json({
-//             prediction: result.prediction,
-//             churn_probability: result.churn_probability,
-//             churn_probability_percentage:
-//                 result.churn_probability_percentage,
-//             recordId: savedPrediction._id,
-//             message: "Prediction saved successfully"
-//         });
-
-//     } catch (error) {
-//         console.error(
-//             "Prediction error:",
-//             error.response?.data || error.message
-//         );
-
-//         res.status(500).json({
-//             message: "Failed to predict or save customer churn"
-//         });
-//     }
-// });
+// Authentication routes
+app.use("/api/auth", userRoutes);
 
 
+// Create churn prediction
 app.post("/api/predict", async (req, res) => {
     try {
-        // Separate customer name from ML features
         const { customerName, ...customerData } = req.body;
 
         if (!customerName || !customerName.trim()) {
@@ -76,7 +42,6 @@ app.post("/api/predict", async (req, res) => {
             });
         }
 
-        // Send only the 19 ML features to FastAPI
         const response = await axios.post(
             "http://127.0.0.1:8000/predict",
             customerData
@@ -84,7 +49,6 @@ app.post("/api/predict", async (req, res) => {
 
         const result = response.data;
 
-        // Save customer name and prediction in MongoDB
         const savedPrediction = await Prediction.create({
             customerName: customerName.trim(),
             customer: customerData,
@@ -92,7 +56,6 @@ app.post("/api/predict", async (req, res) => {
             churnProbability: result.churn_probability
         });
 
-        // Send response to React
         res.status(201).json({
             customerName: savedPrediction.customerName,
             prediction: result.prediction,
@@ -116,7 +79,7 @@ app.post("/api/predict", async (req, res) => {
 });
 
 
-
+// Get prediction history
 app.get("/api/predictions", async (req, res) => {
     try {
         const predictions = await Prediction.find()
@@ -124,6 +87,7 @@ app.get("/api/predictions", async (req, res) => {
             .limit(100);
 
         res.status(200).json(predictions);
+
     } catch (error) {
         console.error("History error:", error.message);
 
@@ -133,7 +97,8 @@ app.get("/api/predictions", async (req, res) => {
     }
 });
 
-// Get a single prediction by ID
+
+// Get single prediction by ID
 app.get("/api/predictions/:id", async (req, res) => {
     try {
         const prediction = await Prediction.findById(req.params.id);
@@ -156,9 +121,11 @@ app.get("/api/predictions/:id", async (req, res) => {
 });
 
 
-
+// Start server after database connection
 DBconn().then(() => {
     app.listen(3000, () => {
         console.log("App is running on port 3000");
     });
+}).catch((error) => {
+    console.error("Database connection failed:", error);
 });
